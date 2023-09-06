@@ -10,4 +10,4 @@ sh merge_lora_weights.sh
 
 ## 3、dpo llama2
 
-sh dpo.sh
+sh dpo-7b.sh
