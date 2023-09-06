@@ -1,0 +1,1 @@
+python merge_lora_weights.py --base_model /root/llama/llama2-lora-fine-tuning/model/models--daryl149--llama-2-7b-chat-hf/snapshots/bbc9b373dacff93e600e4426f2b3d3dd264e90ed --peft_model output --output_dir merged_model_output
