@@ -7,7 +7,7 @@ from typing import Dict, Optional
 import torch
 from datasets import Dataset, load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser, TrainingArguments
-import deepspeed
+# import deepspeed
 from trl import DPOTrainer
 
 import os
@@ -42,7 +42,6 @@ def parse_args():
         type=str,
         help=
         "Path to pretrained model or model identifier from huggingface.co/models.",
-        required=True,
     )
     parser.add_argument(
         "--per_device_train_batch_size",
@@ -128,7 +127,6 @@ def parse_args():
         type=int,
         help=
         "Where to store the model.",
-        required=True,
     )
 
 
@@ -142,6 +140,11 @@ if args.tokenizer_name == '' or args.tokenizer_name == None:
     args.tokenizer_name = args.model_name_or_path
 
 ###定义dpo策略模型
+# tokenizer_kwargs = {
+#         "use_fast": True,
+#         "use_auth_token": True ,
+#         "padding_side": 'left'
+#     }
 tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name ,trust_remote_code=True)
 model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替换成你的模型
                                              trust_remote_code=True,
@@ -200,15 +203,22 @@ model_ref = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替
 
 
 ###准备训练数据
-data_files = {}
-data_files["train"] = args.train_files
-data_files["validation"] = args.validation_files
+# data_files = {}
+# data_files["train"] = args.train_files
+# data_files["validation"] = args.validation_files
+#
+# dataset = load_dataset("json", data_files=data_files)
+#
+#
+# train_data = dataset["train"]
+# val_data = dataset["validation"]
 
-dataset = load_dataset("json", data_files=data_files)
-
-
-train_data = dataset["train"]
-val_data = dataset["validation"]
+dataset = load_dataset("json", data_files="base/harmless_base_cn_train.jsonl")
+train_val = dataset["train"].train_test_split(
+        test_size=2000, shuffle=True, seed=42
+    )
+train_data = train_val["train"]
+val_data = train_val["test"]
 
 
 
