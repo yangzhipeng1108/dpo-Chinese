@@ -7,7 +7,7 @@ from typing import Dict, Optional
 import torch
 from datasets import Dataset, load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser, TrainingArguments
-# import deepspeed
+import deepspeed
 from trl import DPOTrainer
 
 import os
@@ -154,7 +154,9 @@ model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替换�
                                                  bnb_4bit_use_double_quant=True,
                                                  bnb_4bit_quant_type='nf4'
                                              ),
-                                             device_map="auto")
+                                             device_map = {"": int(args.local_rank or 0)}
+                                             # device_map="auto"
+                                             )
 
 model = prepare_model_for_kbit_training(model)
 
@@ -199,26 +201,28 @@ model_ref = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替
                                                  bnb_4bit_use_double_quant=True,
                                                  bnb_4bit_quant_type='nf4'
                                              ),
-                                             device_map="auto")
+                                            device_map={"": int(args.local_rank or 0)}
+                                             # device_map="auto"
+                                                 )
 
 
 ###准备训练数据
-# data_files = {}
-# data_files["train"] = args.train_files
-# data_files["validation"] = args.validation_files
-#
-# dataset = load_dataset("json", data_files=data_files)
-#
-#
-# train_data = dataset["train"]
-# val_data = dataset["validation"]
+data_files = {}
+data_files["train"] = args.train_files
+data_files["validation"] = args.validation_files
 
-dataset = load_dataset("json", data_files="base/harmless_base_cn_train.jsonl")
-train_val = dataset["train"].train_test_split(
-        test_size=2000, shuffle=True, seed=42
-    )
-train_data = train_val["train"]
-val_data = train_val["test"]
+dataset = load_dataset("json", data_files=data_files)
+
+
+train_data = dataset["train"]
+val_data = dataset["validation"]
+
+# dataset = load_dataset("json", data_files="base/harmless_base_cn_train.jsonl")
+# train_val = dataset["train"].train_test_split(
+#         test_size=2000, shuffle=True, seed=42
+#     )
+# train_data = train_val["train"]
+# val_data = train_val["test"]
 
 
 
@@ -272,7 +276,12 @@ training_args = TrainingArguments(
     learning_rate=args.learning_rate,
     evaluation_strategy="steps",
     output_dir=args.output_dir,
-    report_to="tensorboard"
+    report_to="tensorboard",
+    local_rank=args.local_rank,
+    do_train=True,
+    do_eval=True,
+    disable_tqdm=False,
+    ddp_find_unused_parameters=False,
 )
 
 ###定义dpo训练器
