@@ -269,14 +269,6 @@ def smart_tokenizer_and_embedding_resize(
         input_embeddings[-num_new_tokens:] = input_embeddings_avg
         output_embeddings[-num_new_tokens:] = output_embeddings_avg
 
-dataset = load_dataset("json", data_files="base/harmless_base_cn_train.jsonl")
-train_val = dataset["train"].train_test_split(
-        test_size=2000, shuffle=True, seed=42
-    )
-train_data = train_val["train"]
-val_data = train_val["test"]
-
-
 def _load_dataset(data_args, training_args, model_args):
     data_files = {}
     dataset_args = {}
