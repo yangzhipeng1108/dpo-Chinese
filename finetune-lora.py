@@ -269,6 +269,7 @@ def smart_tokenizer_and_embedding_resize(
         input_embeddings[-num_new_tokens:] = input_embeddings_avg
         output_embeddings[-num_new_tokens:] = output_embeddings_avg
 
+
 def _load_dataset(data_args, training_args, model_args):
     data_files = {}
     dataset_args = {}
@@ -363,10 +364,10 @@ def train():
     }
     if model_args.config_name:
         config = AutoConfig.from_pretrained(
-            model_args.config_name, **config_kwargs)
+            model_args.config_name,     trust_remote_code=True,**config_kwargs)
     elif model_args.model_name_or_path:
         config = AutoConfig.from_pretrained(
-            model_args.model_name_or_path, **config_kwargs)
+            model_args.model_name_or_path,     trust_remote_code=True,**config_kwargs)
     else:
         config = CONFIG_MAPPING[model_args.model_type]()
         logger.warning(
@@ -386,10 +387,10 @@ def train():
     }
     if model_args.tokenizer_name:
         tokenizer = AutoTokenizer.from_pretrained(
-            model_args.tokenizer_name, **tokenizer_kwargs)
+            model_args.tokenizer_name,     trust_remote_code=True,**tokenizer_kwargs)
     elif model_args.model_name_or_path:
         tokenizer = AutoTokenizer.from_pretrained(
-            model_args.model_name_or_path, **tokenizer_kwargs)
+            model_args.model_name_or_path,     trust_remote_code=True,**tokenizer_kwargs)
     else:
         raise ValueError(
             "You are instantiating a new tokenizer from scratch. This is not supported by this script."
@@ -422,6 +423,7 @@ def train():
     if model_args.model_name_or_path:
         model = AutoModelForCausalLM.from_pretrained(
             model_args.model_name_or_path,
+            trust_remote_code=True,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
             config=config,
             cache_dir=model_args.cache_dir,
@@ -431,9 +433,10 @@ def train():
             load_in_8bit=True if model_args.load_in_bits == 8 else False,
             quantization_config=bnb_config_4bit if model_args.load_in_bits == 4 else bnb_config_8bit,
             device_map=  {"": int(os.environ.get("LOCAL_RANK") or 0)}
+
         )  # .half().cuda()
     else:
-        model = AutoModelForCausalLM.from_config(config)
+        model = AutoModelForCausalLM.from_config(config,    trust_remote_code=True)
         n_params = sum({p.data_ptr(): p.numel()
                        for p in model.parameters()}.values())
         logger.info(
@@ -484,7 +487,6 @@ def train():
 
         return result
 
-    add_eos_token = True
     def generate_and_tokenize_prompt(data_point):
         data_point = split_prompt_and_responses(data_point)
         full_prompt = prompter.generate_prompt(
@@ -638,7 +640,9 @@ def train():
             model = torch.compile(model)
 
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
-        trainer.save_model()  # Saves the tokenizer too for easy upload
+
+        if training_args.local_rank ==0:
+            trainer.save_model()  # Saves the tokenizer too for easy upload
 
         metrics = train_result.metrics
 
