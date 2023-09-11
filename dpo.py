@@ -134,6 +134,7 @@ def parse_args():
     args = parser.parse_args()
 
     return args
+
 args = parse_args()
 
 if args.tokenizer_name == '' or args.tokenizer_name == None:
@@ -146,6 +147,7 @@ if args.tokenizer_name == '' or args.tokenizer_name == None:
 #         "padding_side": 'left'
 #     }
 tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name ,trust_remote_code=True)
+tokenizer.pad_token = tokenizer.eos_token
 model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替换成你的模型
                                              trust_remote_code=True,
                                              quantization_config=BitsAndBytesConfig(
