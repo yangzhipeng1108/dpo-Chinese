@@ -3,6 +3,9 @@
 ###导入必要的包
 from dataclasses import dataclass, field
 from typing import Dict, Optional
+import datasets
+import logging
+import sys
 
 import torch
 from datasets import Dataset, load_dataset
@@ -129,6 +132,20 @@ def parse_args():
         "Where to store the model.",
     )
 
+    parser.add_argument(
+        "--logging_steps",
+        type=int,
+        help=
+        "Where to store the model.",
+    )
+
+    parser.add_argument(
+        "--logging_strategy",
+        type=str,
+        help=
+        "Where to store the model.",
+        required=True,
+    )
 
     # parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
@@ -136,6 +153,21 @@ def parse_args():
     return args
 
 args = parse_args()
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+
+transformers.utils.logging.set_verbosity_info()
+logger.setLevel(logging.INFO)
+datasets.utils.logging.set_verbosity(logging.INFO)
+transformers.utils.logging.set_verbosity(logging.INFO)
+transformers.utils.logging.enable_default_handler()
+transformers.utils.logging.enable_explicit_format()
+
 
 if args.tokenizer_name == '' or args.tokenizer_name == None:
     args.tokenizer_name = args.model_name_or_path
@@ -179,7 +211,6 @@ def find_all_linear_names(model):
     return list(lora_module_names)
 modules = find_all_linear_names(model)
 
-print(modules)
 config = LoraConfig(
     r=args.lora_r,
     lora_alpha=args.lora_alpha,
@@ -284,6 +315,8 @@ training_args = TrainingArguments(
     do_eval=True,
     disable_tqdm=False,
     ddp_find_unused_parameters=False,
+    logging_strategy=args.logging_strategy,
+    logging_steps=args.logging_steps,
 )
 
 ###定义dpo训练器
