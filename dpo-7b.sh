@@ -14,4 +14,6 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port 29000 dpo.py \
     --num_train_epochs 200 \
     --lora_r 8 \
     --lora_alpha 16 \
-    --output_dir ${output_model}
+    --output_dir ${output_model} \
+    --logging_strategy steps \
+    --logging_steps 10 
