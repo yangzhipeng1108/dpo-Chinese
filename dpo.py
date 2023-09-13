@@ -154,19 +154,18 @@ def parse_args():
 
 args = parse_args()
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    datefmt="%m/%d/%Y %H:%M:%S",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
-
-transformers.utils.logging.set_verbosity_info()
-logger.setLevel(logging.INFO)
-datasets.utils.logging.set_verbosity(logging.INFO)
-transformers.utils.logging.set_verbosity(logging.INFO)
-transformers.utils.logging.enable_default_handler()
-transformers.utils.logging.enable_explicit_format()
+# logger = logging.getLogger(__name__)
+# logging.basicConfig(
+#     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+#     datefmt="%m/%d/%Y %H:%M:%S",
+#     handlers=[logging.StreamHandler(sys.stdout)],
+# )
+#
+# transformers.utils.logging.set_verbosity_info()
+# logger.setLevel(logging.INFO)
+# transformers.utils.logging.set_verbosity(logging.INFO)
+# transformers.utils.logging.enable_default_handler()
+# transformers.utils.logging.enable_explicit_format()
 
 
 if args.tokenizer_name == '' or args.tokenizer_name == None:
@@ -307,9 +306,9 @@ training_args = TrainingArguments(
     remove_unused_columns=False,
     gradient_accumulation_steps=args.gradient_accumulation_steps,
     learning_rate=args.learning_rate,
-    evaluation_strategy="steps",
+    # evaluation_strategy="steps",
     output_dir=args.output_dir,
-    report_to="tensorboard",
+    # report_to="tensorboard",
     local_rank=args.local_rank,
     do_train=True,
     do_eval=True,
