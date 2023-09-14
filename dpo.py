@@ -154,19 +154,6 @@ def parse_args():
 
 args = parse_args()
 
-# logger = logging.getLogger(__name__)
-# logging.basicConfig(
-#     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-#     datefmt="%m/%d/%Y %H:%M:%S",
-#     handlers=[logging.StreamHandler(sys.stdout)],
-# )
-#
-# transformers.utils.logging.set_verbosity_info()
-# logger.setLevel(logging.INFO)
-# transformers.utils.logging.set_verbosity(logging.INFO)
-# transformers.utils.logging.enable_default_handler()
-# transformers.utils.logging.enable_explicit_format()
-
 
 if args.tokenizer_name == '' or args.tokenizer_name == None:
     args.tokenizer_name = args.model_name_or_path
