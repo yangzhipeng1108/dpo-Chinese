@@ -138,6 +138,20 @@ def parse_args():
         default=0,
         help='ZeRO optimization stage for Actor model (and clones).')
 
+    parser.add_argument(
+        "--logging_steps",
+        type=int,
+        help=
+        "Where to store the model.",
+    )
+
+    parser.add_argument(
+        "--logging_strategy",
+        type=str,
+        help=
+        "Where to store the model.",
+        required=True,
+    )
 
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
@@ -182,34 +196,32 @@ tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name ,trust_remote_code
 tokenizer.pad_token = tokenizer.eos_token
 model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替换成你的模型
                                              trust_remote_code=True,
-                                             quantization_config=BitsAndBytesConfig(
-                                                 load_in_4bit=True,
-                                                 bnb_4bit_compute_dtype=torch.bfloat16,
-                                                 bnb_4bit_use_double_quant=True,
-                                                 bnb_4bit_quant_type='nf4'
-                                             ),
+                                             # load_in_8bit=True,
+                                             torch_dtype=torch.float16,
                                              device_map = {"": int(args.local_rank or 0)}
                                              # device_map="auto"
                                              )
 
 model = prepare_model_for_kbit_training(model)
 
-### 所有的线性layer都装配上lora
-import bitsandbytes as bnb
-def find_all_linear_names(model):
-    #cls = bnb.nn.Linear8bitLt
-    cls = bnb.nn.Linear4bit
-    lora_module_names = set()
-    for name, module in model.named_modules():
-        if isinstance(module, cls):
-            names = name.split('.')
-            lora_module_names.add(names[0] if len(names) == 1 else names[-1])
+# ### 所有的线性layer都装配上lora
+# import bitsandbytes as bnb
+# def find_all_linear_names(model):
+#     cls = bnb.nn.Linear8bitLt
+#     # cls = bnb.nn.Linear4bit
+#     lora_module_names = set()
+#     for name, module in model.named_modules():
+#         if isinstance(module, cls):
+#             names = name.split('.')
+#             lora_module_names.add(names[0] if len(names) == 1 else names[-1])
+#
+#
+#     if 'lm_head' in lora_module_names: # needed for 16-bit
+#         lora_module_names.remove('lm_head')
+#     return list(lora_module_names)
+# modules = find_all_linear_names(model)
 
-
-    if 'lm_head' in lora_module_names: # needed for 16-bit
-        lora_module_names.remove('lm_head')
-    return list(lora_module_names)
-modules = find_all_linear_names(model)
+modules = ['v_proj', 'down_proj', 'q_proj', 'gate_proj', 'up_proj', 'o_proj', 'k_proj']
 
 print(modules)
 config = LoraConfig(
@@ -229,16 +241,11 @@ model = get_peft_model(model, config)
 ###定义参考模型
 model_ref = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替换成你的模型
                                              trust_remote_code=True,
-                                             quantization_config=BitsAndBytesConfig(
-                                                 load_in_4bit=True,
-                                                 bnb_4bit_compute_dtype=torch.bfloat16,
-                                                 bnb_4bit_use_double_quant=True,
-                                                 bnb_4bit_quant_type='nf4'
-                                             ),
-                                            device_map={"": int(args.local_rank or 0)}
+                                             # load_in_8bit=True,
+                                             torch_dtype=torch.float16,
+                                             device_map = {"": int(args.local_rank or 0)}
                                              # device_map="auto"
-                                                 )
-
+                                             )
 
 ###准备训练数据
 data_files = {}
@@ -300,28 +307,6 @@ def get_hh(dataset,split: str, sanity_check: bool = False, silent: bool = False,
 train_dataset = get_hh(train_data,"train", sanity_check=True)
 eval_dataset = get_hh(val_data,"test", sanity_check=True)
 
-parameters = filter(lambda p: p.requires_grad, model.parameters())
-
-# if args.moe_param_group:
-#     parameters = create_moe_param_groups(model)
-
-model, optimizer, _, lr_scheduler = deepspeed.initialize(
-    model=model,
-    args=args,
-    config=ds_config,
-    model_parameters=parameters)
-
-
-parameters = filter(lambda p: p.requires_grad, model_ref.parameters())
-
-# if args.moe_param_group:
-#     parameters = create_moe_param_groups(model)
-
-model_ref, optimizer, _, lr_scheduler = deepspeed.initialize(
-    model=model_ref,
-    args=args,
-    config=ds_config,
-    model_parameters=parameters)
 
 
 ###定义dpo训练参数
@@ -331,14 +316,15 @@ training_args = TrainingArguments(
     remove_unused_columns=False,
     gradient_accumulation_steps=args.gradient_accumulation_steps,
     learning_rate=args.learning_rate,
-    evaluation_strategy="steps",
+    # evaluation_strategy="steps",
     output_dir=args.output_dir,
-    report_to="tensorboard",
+    # report_to="tensorboard",
     local_rank=args.local_rank,
     do_train=True,
     do_eval=True,
     disable_tqdm=False,
     ddp_find_unused_parameters=False,
+    deepspeed = ds_config
 )
 
 ###定义dpo训练器
