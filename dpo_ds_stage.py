@@ -166,7 +166,7 @@ else:
     torch.cuda.set_device(args.local_rank)
     device = torch.device("cuda", args.local_rank)
     # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
-    # torch.distributed.init_process_group(backend='nccl')
+    torch.distributed.init_process_group(backend='nccl')
     deepspeed.init_distributed()
 
 args.global_rank = torch.distributed.get_rank()
@@ -181,7 +181,8 @@ ds_config[
 ) * args.gradient_accumulation_steps
 
 ds_config['gradient_accumulation_steps'] = args.gradient_accumulation_steps
-
+if args.global_rank == 0:
+    print(ds_config)
 
 if args.tokenizer_name == '' or args.tokenizer_name == None:
     args.tokenizer_name = args.model_name_or_path
@@ -198,7 +199,7 @@ model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替换�
                                              trust_remote_code=True,
                                              # load_in_8bit=True,
                                              torch_dtype=torch.float16,
-                                             device_map = {"": int(args.local_rank or 0)}
+                                             # device_map = {"": int(args.local_rank or 0)}
                                              # device_map="auto"
                                              )
 
@@ -243,7 +244,7 @@ model_ref = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替
                                              trust_remote_code=True,
                                              # load_in_8bit=True,
                                              torch_dtype=torch.float16,
-                                             device_map = {"": int(args.local_rank or 0)}
+                                             # device_map = {"": int(args.local_rank or 0)}
                                              # device_map="auto"
                                              )
 
