@@ -12,5 +12,5 @@ sh merge_lora_weights.sh
 
 sh dpo-7b.sh
 
-## 3、deepspeed stage 2 3 dpo llama2
+## 4、deepspeed stage 2 3 dpo llama2
 sh stage-7b.sh
