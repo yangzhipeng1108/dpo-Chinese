@@ -14,3 +14,6 @@ sh dpo-7b.sh
 
 ## 4、deepspeed stage 2 3 dpo llama2
 sh stage-7b.sh
+
+## 5、deepspeed multimachine stage 2 3 dpo llama2
+sh stage-m7b.sh
