@@ -1,4 +1,6 @@
-# llama-2-dpo
+# dpo-Chinese
+
+## 支持chatglm，chatglm2，llama，llama2，baichuan，baichuan2
 
 ## 1、finetune llama2
 
