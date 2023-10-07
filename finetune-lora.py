@@ -408,6 +408,7 @@ def train():
         bias="none",
         task_type="CAUSAL_LM",
     )
+    # --lora_module_name "query_key_value,dense_h_to_4h,dense_4h_to_h,dense" \
 
     bnb_config_4bit = BitsAndBytesConfig(
         load_in_4bit=True,
@@ -429,12 +430,12 @@ def train():
             cache_dir=model_args.cache_dir,
             revision=model_args.model_revision,
             use_auth_token=True if model_args.use_auth_token else None,
-            torch_dtype=torch.float16,
+            torch_dtype=  torch.bfloat16,
             load_in_8bit=True if model_args.load_in_bits == 8 else False,
             quantization_config=bnb_config_4bit if model_args.load_in_bits == 4 else bnb_config_8bit,
             device_map=  {"": int(os.environ.get("LOCAL_RANK") or 0)}
 
-        )  # .half().cuda()
+        )  #.half().cuda()
     else:
         model = AutoModelForCausalLM.from_config(config,    trust_remote_code=True)
         n_params = sum({p.data_ptr(): p.numel()
@@ -448,17 +449,21 @@ def train():
     embedding_size = model.get_input_embeddings().weight.shape[0]
     if len(tokenizer) > embedding_size:
         model.resize_token_embeddings(len(tokenizer))
-    if model_args.load_in_bits == 8:
-        model = prepare_model_for_int8_training(model)
-    elif model_args.load_in_bits == 4:
-        model = prepare_model_for_kbit_training(model)
+
+    if 'chatglm' not in model_args.model_name_or_path:
+        if model_args.load_in_bits == 8:
+            model = prepare_model_for_int8_training(model)
+        elif model_args.load_in_bits == 4:
+            model = prepare_model_for_kbit_training(model)
 
     train_on_inputs = True
     print('train_on_inputs', train_on_inputs)
     logger.info("**********生成和词元化prompt**********")
-    tokenizer.pad_token_id = (
-        0  # unk. we want this to be different from the eos token
-    )
+    if 'chatglm' not in model_args.model_name_or_path:
+        tokenizer.pad_token_id = (
+            0  # unk. we want this to be different from the eos token
+        )
+
     tokenizer.padding_side = "left"  # Allow batched inference
     if data_args.block_size is None:
         cutoff_len = 512
@@ -587,11 +592,12 @@ def train():
         special_tokens_dict["bos_token"] = DEFAULT_BOS_TOKEN
     if tokenizer.unk_token is None:
         special_tokens_dict["unk_token"] = DEFAULT_UNK_TOKEN
-    smart_tokenizer_and_embedding_resize(
-        special_tokens_dict=special_tokens_dict,
-        tokenizer=tokenizer,
-        model=model,
-    )
+    if 'chatglm' not in model_args.model_name_or_path:
+        smart_tokenizer_and_embedding_resize(
+            special_tokens_dict=special_tokens_dict,
+            tokenizer=tokenizer,
+            model=model,
+        )
     logger.info("**********初始化训练器**********")
     trainer = Trainer(
         model=model,
