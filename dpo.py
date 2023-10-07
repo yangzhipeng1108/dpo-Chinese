@@ -154,6 +154,19 @@ def parse_args():
 
 args = parse_args()
 
+# logger = logging.getLogger(__name__)
+# logging.basicConfig(
+#     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+#     datefmt="%m/%d/%Y %H:%M:%S",
+#     handlers=[logging.StreamHandler(sys.stdout)],
+# )
+#
+# transformers.utils.logging.set_verbosity_info()
+# logger.setLevel(logging.INFO)
+# transformers.utils.logging.set_verbosity(logging.INFO)
+# transformers.utils.logging.enable_default_handler()
+# transformers.utils.logging.enable_explicit_format()
+
 
 if args.tokenizer_name == '' or args.tokenizer_name == None:
     args.tokenizer_name = args.model_name_or_path
@@ -164,8 +177,12 @@ if args.tokenizer_name == '' or args.tokenizer_name == None:
 #         "use_auth_token": True ,
 #         "padding_side": 'left'
 #     }
+
+# /root/llama1/rl_dpo/Baichuan2-7B-Chat  chatglm2-6b/
 tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name ,trust_remote_code=True)
-tokenizer.pad_token = tokenizer.eos_token
+if 'chatglm' not in args.model_name_or_path:
+    tokenizer.pad_token = tokenizer.eos_token
+tokenizer.padding_side = "left"  # Allow batched inference
 model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替换成你的模型
                                              trust_remote_code=True,
                                              quantization_config=BitsAndBytesConfig(
