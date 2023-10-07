@@ -2,20 +2,22 @@
 
 ## 支持chatglm，chatglm2，llama，llama2，baichuan，baichuan2
 
-## 1、finetune llama2
+## llama，llama2
+
+### 1、finetune llama2
 
 sh  finetune-7b.sh
 
-## 2、merge_lora_weights
+### 2、merge_lora_weights
 
 sh merge_lora_weights.sh
 
-## 3、dpo llama2
+###  3、dpo llama2
 
 sh dpo-7b.sh
 
-## 4、deepspeed stage 2 3 dpo llama2
+###  4、deepspeed stage 2 3 dpo llama2
 sh stage-7b.sh
 
-## 5、deepspeed multimachine stage 2 3 dpo llama2
+### 5、deepspeed multimachine stage 2 3 dpo llama2
 sh stage-m7b.sh
