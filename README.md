@@ -2,7 +2,7 @@
 
 ## 支持chatglm，chatglm2，llama，llama2，baichuan，baichuan2
 
-## llama，llama2
+## 一、llama，llama2
 
 ### 1、finetune llama2
 
@@ -21,3 +21,7 @@ sh stage-7b.sh
 
 ### 5、deepspeed multimachine stage 2 3 dpo llama2
 sh stage-m7b.sh
+
+## 二、chatglm，chatglm2
+
+## 三、baichuan，baichuan2
