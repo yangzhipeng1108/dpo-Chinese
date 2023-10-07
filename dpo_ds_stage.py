@@ -193,13 +193,20 @@ if args.tokenizer_name == '' or args.tokenizer_name == None:
 #         "use_auth_token": True ,
 #         "padding_side": 'left'
 #     }
+
+# from glm.tokenization_chatglm import ChatGLMTokenizer as ChatGLM2Tokenizer
+# if 'chatglm' in args.tokenizer_name:
+#     tokenizer = ChatGLM2Tokenizer.from_pretrained(args.tokenizer_name)
+# else:
 tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name ,trust_remote_code=True)
-tokenizer.pad_token = tokenizer.eos_token
+if 'chatglm' not in args.model_name_or_path:
+    tokenizer.pad_token = tokenizer.eos_token
+tokenizer.padding_side = "left"  # Allow batched inference
 model = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替换成你的模型
                                              trust_remote_code=True,
                                              # load_in_8bit=True,
                                              torch_dtype=torch.float16,
-                                             # device_map = {"": int(args.local_rank or 0)}
+                                             device_map={"": args.local_rank}
                                              # device_map="auto"
                                              )
 
@@ -222,7 +229,11 @@ model = prepare_model_for_kbit_training(model)
 #     return list(lora_module_names)
 # modules = find_all_linear_names(model)
 
-modules = ['v_proj', 'down_proj', 'q_proj', 'gate_proj', 'up_proj', 'o_proj', 'k_proj']
+if 'chatglm' in args.model_name_or_path:
+    modules = ['query_key_value','dense_h_to_4h','dense_4h_to_h','dense']
+else:
+    modules = ['v_proj', 'down_proj', 'q_proj', 'gate_proj', 'up_proj', 'o_proj', 'k_proj']
+
 
 print(modules)
 config = LoraConfig(
@@ -244,7 +255,7 @@ model_ref = AutoModelForCausalLM.from_pretrained(args.model_name_or_path, ###替
                                              trust_remote_code=True,
                                              # load_in_8bit=True,
                                              torch_dtype=torch.float16,
-                                             # device_map = {"": int(args.local_rank or 0)}
+                                             device_map={"": args.local_rank}
                                              # device_map="auto"
                                              )
 
