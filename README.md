@@ -6,7 +6,7 @@
 
 ### 1、finetune llama2
 
-sh  finetune-7b.sh 修改
+sh  finetune-7b.sh
 
 ### 2、merge_lora_weights
 
@@ -25,7 +25,7 @@ sh stage-m7b.sh
 ## 二、chatglm，chatglm2
 ### 1、finetune chatglm2
 
-sh  finetune-7b.sh 
+sh  finetune-7b.sh    修改 --model_name_or_path  --tokenizer_name
 
 ### 2、merge_lora_weights
 
@@ -33,12 +33,12 @@ sh merge_lora_weights.sh
 
 ###  3、dpo chatglm2
 
-sh dpo-7b.sh
+sh dpo-7b.sh  修改 --model_name_or_path  --tokenizer_name
 
 ###  4、deepspeed stage 2 3 dpo chatglm2
-sh stage-7b.sh
+sh stage-7b.sh  修改 --model_name_or_path  --tokenizer_name
 
 ### 5、deepspeed multimachine stage 2 3 dpo chatglm2
-sh stage-m7b.sh
+sh stage-m7b.sh  修改 --model_name_or_path  --tokenizer_name
 
 ## 三、baichuan，baichuan2
