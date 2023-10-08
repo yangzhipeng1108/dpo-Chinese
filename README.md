@@ -6,7 +6,7 @@
 
 ### 1、finetune llama2
 
-sh  finetune-7b.sh
+sh  finetune-7b.sh 修改
 
 ### 2、merge_lora_weights
 
